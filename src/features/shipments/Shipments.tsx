@@ -11,7 +11,7 @@ import {
   getStorageForSite,
   createStorage,
 } from '../../lib/api';
-import { Plus, Package, Warehouse, CheckCircle, AlertCircle, Edit, MoreVertical, Eye } from 'lucide-react';
+import { Plus, Package, Warehouse, Edit } from 'lucide-react';
 
 type ShipmentStatus = 'pending' | 'in_transit' | 'delivered' | 'received' | 'discrepancy';
 type BottleStatus = 'received' | 'stored' | 'dispensed' | 'returned' | 'destroyed';
@@ -25,7 +25,7 @@ const shipmentStatusColors: Record<ShipmentStatus, string> = {
 };
 
 export default function Shipments() {
-  const { role } = useAuth();
+  const { /* role */ _ } = useAuth();
   const [shipments, setShipments] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

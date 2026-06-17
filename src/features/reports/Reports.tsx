@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import { getAllPatients, getAEsForPatient, submitFdaReport } from '../../lib/api';
-import { FileText, Download, Send, AlertCircle, CheckCircle, Loader2, Calendar } from 'lucide-react';
+import { FileText, Download, Send, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Reports() {
-  const { role } = useAuth();
+  const { /* role */ _ } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [patientAEs, setPatientAEs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [/* loading */ _, _setLoading] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'initial' | 'followup' | 'periodic'>('initial');
-  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  const [/* dateRange */ _dateRange, _setDateRange] = useState({ from: '', to: '' });
 
   const loadPatients = async () => {
     try {

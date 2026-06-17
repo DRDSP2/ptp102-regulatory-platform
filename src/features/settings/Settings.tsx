@@ -7,7 +7,7 @@ import {
   approveVeterinarian,
   suspendVeterinarian,
 } from '../../lib/api';
-import { Settings, UserCheck, UserX, Save, AlertCircle, Shield, Database, Key, Globe } from 'lucide-react';
+import { Settings, Save, AlertCircle, Shield, Database, Key, Globe } from 'lucide-react';
 
 type StudySettings = {
   study_name: string;
@@ -26,10 +26,10 @@ type StudySettings = {
 };
 
 export default function Settings() {
-  const { role } = useAuth();
+  const { /* role */ _ } = useAuth();
   const [settings, setSettings] = useState<StudySettings | null>(null);
   const [veterinarians, setVeterinarians] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [/* loading */ _, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'study' | 'vets' | 'integrations' | 'compliance'>('study');
 

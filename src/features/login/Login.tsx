@@ -14,7 +14,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signIn(email, password);
-    } catch (err) {
+    } catch (_err) {
       setError('Login failed. Check credentials and try again.');
     } finally {
       setLoading(false);

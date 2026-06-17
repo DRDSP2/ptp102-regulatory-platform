@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import {
   getAllPatients,
@@ -6,18 +6,19 @@ import {
   updateConsent,
   generateConsentPDF,
 } from '../../lib/api';
-import { FileText, Signature, Download, CheckCircle, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink } from 'lucide-react';
 
 export default function ConsentWorkflow() {
-  const { role } = useAuth();
+  const { /* role */ _ } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
-  const [consent, setConsent] = useState<any | null>(null);
+  const [/* consent */ _, _setConsent] = useState<any | null>(null);
   const [generating, setGenerating] = useState(false);
   const [ownerName, setOwnerName] = useState('');
   const signaturePadRef = useRef<HTMLCanvasElement>(null);
   const [signatureImg, setSignatureImg] = useState<string | null>(null);
+  const timestampRef = useRef(0);
 
   const loadPatients = async () => {
     try {
@@ -66,7 +67,7 @@ export default function ConsentWorkflow() {
 
     try {
       setGenerating(true);
-      let consentRecord = consent;
+      let consentRecord = _consent;
       if (!consentRecord) {
         consentRecord = await createConsent({
           patient_id: selectedPatient.id,
@@ -94,8 +95,9 @@ export default function ConsentWorkflow() {
 
   const handleDownload = () => {
     if (signaturePadRef.current) {
+      timestampRef.current = Date.now();
       const link = document.createElement('a');
-      link.download = `signature-${Date.now()}.png`;
+      link.download = `signature-${timestampRef.current}.png`;
       link.href = signaturePadRef.current.toDataURL();
       link.click();
     }
@@ -194,8 +196,8 @@ export default function ConsentWorkflow() {
                     <FileText className="h-4 w-4" />
                     {generating ? 'Generating PDF...' : 'Generate Consent PDF'}
                   </button>
-                  {consent?.document_url && (
-                    <a href={consent.document_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 rounded border border-slate-800 text-sm hover:bg-slate-800">
+                  {_consent?.document_url && (
+                    <a href={_consent.document_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 rounded border border-slate-800 text-sm hover:bg-slate-800">
                       <ExternalLink className="h-4 w-4" />
                       View Generated PDF
                     </a>

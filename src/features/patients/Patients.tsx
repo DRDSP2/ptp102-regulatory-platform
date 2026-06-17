@@ -10,7 +10,7 @@ import {
   lockPatient,
   freezePatient,
 } from '../../lib/api';
-import { Plus, Search, Filter, MoreVertical, Lock, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Lock, AlertTriangle, Eye, Edit, Trash2 } from 'lucide-react';
 
 type PatientStatus = 'screening' | 'enrolled' | 'active' | 'completed' | 'withdrawn' | 'locked' | 'frozen';
 
