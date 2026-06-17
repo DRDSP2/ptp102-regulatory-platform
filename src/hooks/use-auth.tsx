@@ -5,19 +5,19 @@ import {
   signOut as apiSignOut,
   getVeterinarian,
   getAdministrator,
-  type Veterinarian,
-  type Administrator,
 } from '../lib/api';
 
 type Role = 'vet' | 'admin';
-type SessionStatus = 'loading' | 'authenticated' | 'guest';
+type User = { id: string; email: string | null };
 
 type Session = {
-  status: SessionStatus;
+  status: 'loading' | 'authenticated' | 'guest';
   role: Role | null;
-  user: { id: string; email: string | null };
-  vet?: Veterinarian;
-  admin?: Administrator;
+  user: User;
+  vet?: any;
+  admin?: any;
+  signIn?: (email: string, password: string) => Promise<void>;
+  signOut?: () => Promise<void>;
 };
 
 const AuthContext = createContext<Session>({
@@ -27,36 +27,29 @@ const AuthContext = createContext<Session>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session>({
-    status: 'loading',
-    role: null,
-    user: { id: '', email: null },
-  });
+  const [session, setSession] = useState<Session>({ status: 'loading', role: null, user: { id: '', email: null } });
 
   useEffect(() => {
-    const init = async () => {
+    (async () => {
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        setSession({ status: 'guest', role: null, user: { id: '', email: null } });
-        return;
-      }
+      if (!data.session) return setSession({ status: 'guest', role: null, user: { id: '', email: null } });
       const uid = data.session.user.id;
-      const email = data.session.user.email;
+      const email = data.session.user.email ?? null;
       const vet = await getVeterinarian(uid).catch(() => undefined);
       const admin = await getAdministrator(uid).catch(() => undefined);
-      const role: Role = admin ? 'admin' : vet ? 'vet' : 'admin';
+      const role: Role = admin ? 'admin' : 'vet';
       setSession({ status: 'authenticated', role, user: { id: uid, email }, vet, admin });
-    };
-    init();
+    })();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     const data = await signInWithPassword(email, password);
     const uid = data.session.user.id;
+    const userEmail = data.session.user.email ?? null;
     const vet = await getVeterinarian(uid).catch(() => undefined);
     const admin = await getAdministrator(uid).catch(() => undefined);
-    const role: Role = admin ? 'admin' : vet ? 'vet' : 'admin';
-    setSession({ status: 'authenticated', role, user: { id: uid, email: data.session.user.email }, vet, admin });
+    const role: Role = admin ? 'admin' : 'vet';
+    setSession({ status: 'authenticated', role, user: { id: uid, email: userEmail }, vet, admin });
   };
 
   const signOut = async () => {
@@ -64,11 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession({ status: 'guest', role: null, user: { id: '', email: null } });
   };
 
-  return (
-    <AuthContext.Provider value={session}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ ...session, signIn, signOut }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
