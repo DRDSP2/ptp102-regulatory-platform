@@ -33,10 +33,6 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'study' | 'vets' | 'integrations' | 'compliance'>('study');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       const [settingsData, vetsData] = await Promise.all([
@@ -51,6 +47,10 @@ export default function Settings() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +121,7 @@ export default function Settings() {
       {activeTab === 'study' && (
         <form onSubmit={handleSave} className="border border-slate-800 rounded-md p-4 space-y-4 max-w-3xl">
           <h3 className="font-medium flex items-center gap-2"><Database className="h-4 w-4" /> Study Configuration</h3>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <label className="block"><span className="text-sm text-slate-300">Study Name *</span>
               <input value={settings?.study_name || ''} onChange={e => setSettings({...settings!, study_name: e.target.value})} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" required />
@@ -159,7 +159,7 @@ export default function Settings() {
               <input type="email" value={settings?.ica_email || ''} onChange={e => setSettings({...settings!, ica_email: e.target.value})} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
             </label>
             <label className="block"><span className="text-sm text-slate-300">DSMB Email</span>
-              <input type="email" value={settings?.dsmb_email || ''} onChange={e => setSettings({...settings!, dsb_email: e.target.value})} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
+              <input type="email" value={settings?.dsmb_email || ''} onChange={e => setSettings({...settings!, dsmb_email: e.target.value})} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
             </label>
             <label className="col-span-2"><span className="text-sm text-slate-300">Regulatory Contact Email</span>
               <input type="email" value={settings?.regulatory_contact_email || ''} onChange={e => setSettings({...settings!, regulatory_contact_email: e.target.value})} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
@@ -227,7 +227,7 @@ export default function Settings() {
       {activeTab === 'integrations' && (
         <div className="border border-slate-800 rounded-md p-4 space-y-6">
           <h3 className="font-medium flex items-center gap-2"><Globe className="h-4 w-4" /> External Integrations</h3>
-          
+
           <div className="p-4 bg-slate-900/50 rounded border border-slate-800">
             <h4 className="font-medium mb-2">4Everland IPFS Hosting</h4>
             <p className="text-sm text-slate-400 mb-3">Deployed to: <code className="text-slate-300">byrock.eth.limo</code></p>
@@ -262,7 +262,7 @@ export default function Settings() {
       {activeTab === 'compliance' && (
         <div className="border border-slate-800 rounded-md p-4 space-y-6">
           <h3 className="font-medium flex items-center gap-2"><AlertCircle className="h-4 w-4" /> Regulatory Compliance Status</h3>
-          
+
           <div className="grid gap-4 md:grid-cols-2">
             <div className="p-4 bg-slate-900/50 rounded border border-slate-800">
               <h4 className="font-medium flex items-center gap-2"><Shield className="h-4 w-4" /> FDA 21 CFR Part 11</h4>

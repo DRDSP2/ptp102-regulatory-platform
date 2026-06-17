@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import {
   getAllPatients,
@@ -6,7 +6,7 @@ import {
   updateConsent,
   generateConsentPDF,
 } from '../../lib/api';
-import { FileText, Signature, Download, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { FileText, Signature, Download, CheckCircle, ExternalLink } from 'lucide-react';
 
 export default function ConsentWorkflow() {
   const { role } = useAuth();
@@ -16,12 +16,8 @@ export default function ConsentWorkflow() {
   const [consent, setConsent] = useState<any | null>(null);
   const [generating, setGenerating] = useState(false);
   const [ownerName, setOwnerName] = useState('');
-  const [signaturePad, setSignaturePad] = useState<HTMLCanvasElement | null>(null);
+  const signaturePadRef = useRef<HTMLCanvasElement>(null);
   const [signatureImg, setSignatureImg] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadPatients();
-  }, []);
 
   const loadPatients = async () => {
     try {
@@ -34,19 +30,27 @@ export default function ConsentWorkflow() {
     }
   };
 
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
   const handlePatientSelect = async (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     setSelectedPatient(patient);
     setOwnerName(patient?.owner_name || '');
     setSignatureImg(null);
+    if (signaturePadRef.current) {
+      const ctx = signaturePadRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, signaturePadRef.current.width, signaturePadRef.current.height);
+    }
     // TODO: fetch existing consent for this patient
   };
 
   const handleSignatureClear = () => {
     setSignatureImg(null);
-    if (signaturePad) {
-      const ctx = signaturePad.getContext('2d');
-      ctx?.clearRect(0, 0, signaturePad.width, signaturePad.height);
+    if (signaturePadRef.current) {
+      const ctx = signaturePadRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, signaturePadRef.current.width, signaturePadRef.current.height);
     }
   };
 
@@ -62,7 +66,6 @@ export default function ConsentWorkflow() {
 
     try {
       setGenerating(true);
-      // Create or update consent record
       let consentRecord = consent;
       if (!consentRecord) {
         consentRecord = await createConsent({
@@ -90,10 +93,10 @@ export default function ConsentWorkflow() {
   };
 
   const handleDownload = () => {
-    if (signaturePad) {
+    if (signaturePadRef.current) {
       const link = document.createElement('a');
       link.download = `signature-${Date.now()}.png`;
-      link.href = signaturePad.toDataURL();
+      link.href = signaturePadRef.current.toDataURL();
       link.click();
     }
   };
@@ -166,7 +169,7 @@ export default function ConsentWorkflow() {
                   <span className="text-sm text-slate-300">Electronic Signature (Owner)</span>
                   <div className="relative mt-1">
                     <canvas
-                      ref={setSignaturePad}
+                      ref={signaturePadRef}
                       width={600}
                       height={200}
                       className="border border-slate-700 bg-white rounded cursor-crosshair"
@@ -216,18 +219,18 @@ export default function ConsentWorkflow() {
       </div>
 
       {/* Signature Pad Handler */}
-      <SignaturePadInternal ref={setSignaturePad} onSignature={setSignatureImg} />
+      <SignaturePadInternal onSignature={setSignatureImg} />
     </div>
   );
 }
 
 // Internal signature pad component
-function SignaturePadInternal({ ref, onSignature }: any) {
-  const canvasRef = useState<HTMLCanvasElement | null>(null)[0];
+function SignaturePadInternal({ onSignature }: { onSignature: (img: string) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!canvasRef) return;
-    const canvas = canvasRef;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -236,8 +239,6 @@ function SignaturePadInternal({ ref, onSignature }: any) {
     ctx.lineCap = 'round';
 
     let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
 
     const getCoords = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -249,8 +250,6 @@ function SignaturePadInternal({ ref, onSignature }: any) {
     const start = (e: MouseEvent | TouchEvent) => {
       isDrawing = true;
       const { x, y } = getCoords(e);
-      lastX = x;
-      lastY = y;
       ctx.beginPath();
       ctx.moveTo(x, y);
     };
@@ -261,8 +260,6 @@ function SignaturePadInternal({ ref, onSignature }: any) {
       const { x, y } = getCoords(e);
       ctx.lineTo(x, y);
       ctx.stroke();
-      lastX = x;
-      lastY = y;
     };
 
     const stop = () => {
@@ -289,9 +286,7 @@ function SignaturePadInternal({ ref, onSignature }: any) {
       canvas.removeEventListener('touchmove', draw);
       canvas.removeEventListener('touchend', stop);
     };
-  }, [canvasRef, onSignature]);
+  }, [onSignature]);
 
-  if (ref) ref.current = canvasRef;
-
-  return null;
+  return <canvas ref={canvasRef} width={1} height={1} style={{ display: 'none' }} />;
 }

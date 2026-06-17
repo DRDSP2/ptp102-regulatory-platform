@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import {
   getAllPatients,
@@ -48,10 +48,6 @@ export default function Patients() {
     site_id: '',
   });
 
-  useEffect(() => {
-    loadPatients();
-  }, [role, vet]);
-
   const loadPatients = async () => {
     try {
       setLoading(true);
@@ -64,13 +60,17 @@ export default function Patients() {
     }
   };
 
-  const filteredPatients = patients.filter(p => {
+  useEffect(() => {
+    loadPatients();
+  }, [role, vet]);
+
+  const filteredPatients = useMemo(() => patients.filter(p => {
     const matchesSearch = p.horse_name?.toLowerCase().includes(search.toLowerCase()) ||
       p.patient_number?.toLowerCase().includes(search.toLowerCase()) ||
       p.owner_name?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [patients, search, statusFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

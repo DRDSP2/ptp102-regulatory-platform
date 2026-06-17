@@ -1,8 +1,8 @@
 import type { Database } from './database.types';
+import { supabase } from './supabase';
 
 export const db = {
   get supabase() {
-    const { supabase } = require('./supabase');
-    return supabase as import('./supabase').default & { __db?: Database };
+    return supabase as typeof supabase & { __db?: Database };
   },
 };

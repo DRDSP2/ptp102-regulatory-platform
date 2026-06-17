@@ -7,7 +7,7 @@ import {
   updateAE,
   submitFdaReport,
 } from '../../lib/api';
-import { Plus, AlertTriangle, FileText, Send, Clock, AlertCircle, CheckCircle, Eye, Edit } from 'lucide-react';
+import { Plus, AlertTriangle, FileText, Send, AlertCircle, Edit } from 'lucide-react';
 
 type AESeverity = 'mild' | 'moderate' | 'severe' | 'life_threatening' | 'fatal';
 type AERelationship = 'unrelated' | 'unlikely' | 'possible' | 'probable' | 'definite';
@@ -30,10 +30,9 @@ const outcomeColors: Record<AEOutcome, string> = {
 };
 
 export default function AdverseEvents() {
-  const { role, vet } = useAuth();
+  const { vet } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [aes, setAEs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingAE, setEditingAE] = useState<any | null>(null);
@@ -55,10 +54,6 @@ export default function AdverseEvents() {
     expected: false,
   });
 
-  useEffect(() => {
-    loadPatients();
-  }, []);
-
   const loadPatients = async () => {
     try {
       const list = await getAllPatients();
@@ -76,6 +71,10 @@ export default function AdverseEvents() {
       console.error('Load AEs error:', err);
     }
   };
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
 
   const handlePatientSelect = (patient: any) => {
     setSelectedPatient(patient);

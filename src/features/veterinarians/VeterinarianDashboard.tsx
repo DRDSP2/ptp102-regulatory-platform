@@ -12,7 +12,7 @@ import {
   createLabResult,
   createVideo,
 } from '../../lib/api';
-import { Plus, Search, Filter, Eye, Edit, Upload, Calendar, Stethoscope, Pill, FlaskConical, Video } from 'lucide-react';
+import { Plus, Stethoscope } from 'lucide-react';
 
 type Tab = 'patients' | 'assessments' | 'treatments' | 'labs' | 'videos';
 
@@ -34,13 +34,6 @@ export default function VeterinarianDashboard() {
     video: { video_type: 'gait_analysis', title: '', description: '', storage_path: '', duration_seconds: 0, file_size_mb: 0 },
   };
 
-  useEffect(() => {
-    if (vet?.id) {
-      loadVetProfile();
-      loadPatients();
-    }
-  }, [vet?.id]);
-
   const loadVetProfile = async () => {
     try {
       const profile = await getVeterinarian(vet.id);
@@ -60,6 +53,13 @@ export default function VeterinarianDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (vet?.id) {
+      loadVetProfile();
+      loadPatients();
+    }
+  }, [vet?.id]);
 
   const loadPatientData = async (patientId: string) => {
     try {
@@ -105,21 +105,14 @@ export default function VeterinarianDashboard() {
   const resetForm = (type: keyof typeof forms) => {
     const today = new Date().toISOString().split('T')[0];
     if (type === 'assessment') {
-      setForms({ ...forms, assessment: { ...forms.assessment, assessment_date: today, administered_by: vet?.full_name } });
+      forms.assessment = { ...forms.assessment, assessment_date: today, administered_by: vet?.full_name };
     } else if (type === 'treatment') {
-      setForms({ ...forms, treatment: { ...forms.treatment, treatment_date: today, administered_by: vet?.full_name } });
+      forms.treatment = { ...forms.treatment, treatment_date: today, administered_by: vet?.full_name };
     } else if (type === 'lab') {
-      setForms({ ...forms, lab: { ...forms.lab, sample_date: today } });
+      forms.lab = { ...forms.lab, sample_date: today };
     } else if (type === 'video') {
-      setForms({ ...forms, video: { ...forms.video } });
+      forms.video = { ...forms.video };
     }
-  };
-
-  const setForms = (newForms: typeof forms) => {
-    // This is a workaround since we're using a single forms object
-    Object.keys(newForms).forEach(key => {
-      forms[key as keyof typeof forms] = newForms[key as keyof typeof forms];
-    });
   };
 
   const openForm = (type: keyof typeof forms) => {
@@ -268,7 +261,7 @@ export default function VeterinarianDashboard() {
                         )}
                       </div>
                       <div className="flex gap-1">
-                        <button className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-100"><Eye className="h-4 w-4" /></button>
+                        <button className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-100">👁</button>
                       </div>
                     </div>
                   </div>
@@ -307,14 +300,14 @@ export default function VeterinarianDashboard() {
                 return (
                   <div className="grid grid-cols-2 gap-4">
                     {fields.map(([key, value]) => (
-                      <label key={key} className={`block ${key.includes('notes') || key.includes('description') || key.includes('results_json') || key.includes('reference_ranges_json') ? 'col-span-2' : ''}`}>
-                        <span className="text-sm text-slate-300">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}{key.includes('_date') || key.includes('_json') ? ' *' : ''}</span>
+                      <label key={key} className={`${key.includes('notes') || key.includes('description') || key.includes('results_json') || key.includes('reference_ranges_json') ? 'col-span-2' : ''}`}>
+                        <span className="text-sm text-slate-300">{key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
                         {key.includes('json') ? (
-                          <textarea value={value} onChange={e => forms[formType!][key] = e.target.value} rows={4} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm font-mono text-xs" />
+                          <textarea value={value} onChange={e => { forms[formType!][key] = e.target.value; }} rows={4} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm font-mono text-xs" />
                         ) : key.includes('date') ? (
-                          <input type="date" value={value} onChange={e => forms[formType!][key] = e.target.value} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
+                          <input type="date" value={value} onChange={e => { forms[formType!][key] = e.target.value; }} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
                         ) : (
-                          <input value={value} onChange={e => forms[formType!][key] = e.target.value} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
+                          <input value={value} onChange={e => { forms[formType!][key] = e.target.value; }} className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm" />
                         )}
                       </label>
                     ))}

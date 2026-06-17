@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/use-auth';
 import { getAuditLogs } from '../../lib/api';
-import { Search, Filter, Download, ChevronLeft, ChevronRight, Database, User, Clock, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Database, User } from 'lucide-react';
 
 export default function AuditLogs() {
-  const { role } = useAuth();
+  const { /* role */ _: _ignoreRole } = useAuth();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(50);
   const [hasMore, setHasMore] = useState(true);
   const [filters, setFilters] = useState({ table: '', action: '', user_id: '', date_from: '', date_to: '' });
-
-  useEffect(() => {
-    loadLogs();
-  }, [page, filters]);
 
   const loadLogs = async () => {
     try {
@@ -34,6 +30,10 @@ export default function AuditLogs() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadLogs();
+  }, [page, filters, loadLogs]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

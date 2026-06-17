@@ -13,10 +13,6 @@ export default function Reports() {
   const [reportType, setReportType] = useState<'initial' | 'followup' | 'periodic'>('initial');
   const [dateRange, setDateRange] = useState({ from: '', to: '' });
 
-  useEffect(() => {
-    loadPatients();
-  }, []);
-
   const loadPatients = async () => {
     try {
       const list = await getAllPatients();
@@ -25,6 +21,10 @@ export default function Reports() {
       console.error('Load patients error:', err);
     }
   };
+
+  useEffect(() => {
+    loadPatients();
+  }, []);
 
   const loadPatientAEs = async (patientId: string) => {
     try {

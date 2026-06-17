@@ -11,7 +11,7 @@ import {
   getStorageForSite,
   createStorage,
 } from '../../lib/api';
-import { Plus, Package, Truck, Warehouse, CheckCircle, AlertCircle, Edit, Scan, MoreVertical, Eye } from 'lucide-react';
+import { Plus, Package, Warehouse, CheckCircle, AlertCircle, Edit, MoreVertical, Eye } from 'lucide-react';
 
 type ShipmentStatus = 'pending' | 'in_transit' | 'delivered' | 'received' | 'discrepancy';
 type BottleStatus = 'received' | 'stored' | 'dispensed' | 'returned' | 'destroyed';
@@ -77,10 +77,6 @@ export default function Shipments() {
     notes: '',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       setLoading(true);
@@ -96,6 +92,10 @@ export default function Shipments() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleShipmentSelect = async (shipment: any) => {
     setSelectedShipment(shipment);
