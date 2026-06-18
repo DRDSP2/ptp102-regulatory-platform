@@ -254,3 +254,60 @@ export async function createVideo(video: Partial<Video>) {
   if (error) throw error;
   return data as Video;
 }
+
+// Alias used by AdverseEvents/Reports
+export const getAEsForPatient = getAdverseEventsForPatient;
+
+export async function createAE(ae: Partial<AdverseEvent>) {
+  const { data, error } = await supabase.from('adverse_events').insert(ae as any).select().single();
+  if (error) throw error;
+  return data as AdverseEvent;
+}
+
+export async function updateAE(id: string, ae: Partial<AdverseEvent>) {
+  const { data, error } = await supabase.from('adverse_events').update(ae as any).eq('id', id).select().single();
+  if (error) throw error;
+  return data as AdverseEvent;
+}
+
+export async function submitFdaReport(aeId: string, reportType?: string, narrative?: string) {
+  const { data, error } = await supabase.from('adverse_events').update({
+    fda_report_submitted: true,
+    fda_report_date: new Date().toISOString(),
+    fda_report_type: reportType ?? 'medwatch',
+    narrative: narrative ?? '',
+  } as any).eq('id', aeId).select().single();
+  if (error) throw error;
+  return data as AdverseEvent;
+}
+
+export async function createConsent(consent: Partial<InformedConsent>) {
+  const { data, error } = await supabase.from('informed_consents').insert(consent as any).select().single();
+  if (error) throw error;
+  return data as InformedConsent;
+}
+
+export async function updateConsent(id: string, consent: Partial<InformedConsent>) {
+  const { data, error } = await supabase.from('informed_consents').update(consent as any).eq('id', id).select().single();
+  if (error) throw error;
+  return data as InformedConsent;
+}
+
+export async function generateConsentPDF(consentId: string, patientId: string, ownerName: string, signatureData: string | null) {
+  const { data, error } = await supabase.from('informed_consents').update({
+    document_url: `/consents/${consentId}.pdf`,
+    signed_at: new Date().toISOString(),
+    owner_name: ownerName,
+    signature_data: signatureData,
+  } as any).eq('id', consentId).select().single();
+  if (error) throw error;
+  return data as InformedConsent;
+}
+
+export async function getAuditLogs(page = 0, pageSize = 50) {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+  const { data, error } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).range(from, to);
+  if (error) throw error;
+  return data ?? [];
+}

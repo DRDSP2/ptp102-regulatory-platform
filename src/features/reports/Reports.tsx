@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/use-auth';
-import { getAllPatients } from '../../lib/api';
+import { getAllPatients, getAEsForPatient, submitFdaReport } from '../../lib/api';
 import { FileText, Download, Send, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Reports() {
