@@ -61,5 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const ctx = useContext(AuthContext);
+  const { user } = ctx;
+  return {
+    session: ctx,
+    status: ctx.status,
+    role: ctx.role,
+    user,
+    signOut: ctx.signOut,
+  };
 }

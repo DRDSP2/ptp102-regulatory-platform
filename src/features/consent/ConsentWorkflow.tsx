@@ -9,9 +9,8 @@ import {
 import { FileText, ExternalLink } from 'lucide-react';
 
 export default function ConsentWorkflow() {
-  const { /* role */ _ } = useAuth();
-  const [patients, setPatients] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { role } = useAuth();
+  const [consents, setConsents] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [/* consent */ _, _setConsent] = useState<any | null>(null);
   const [generating, setGenerating] = useState(false);

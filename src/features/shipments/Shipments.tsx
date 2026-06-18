@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/use-auth';
 import {
   getShipments,
   createShipment,
@@ -13,19 +12,19 @@ import {
 } from '../../lib/api';
 import { Plus, Package, Warehouse, Edit } from 'lucide-react';
 
-type ShipmentStatus = 'pending' | 'in_transit' | 'delivered' | 'received' | 'discrepancy';
-type BottleStatus = 'received' | 'stored' | 'dispensed' | 'returned' | 'destroyed';
+type ShipmentStatus = 'returned' | 'pending' | 'shipped' | 'in_transit' | 'delivered' | 'lost';
+type BottleStatus = 'in_stock' | 'dispensed' | 'returned' | 'destroyed' | 'expired';
 
 const shipmentStatusColors: Record<ShipmentStatus, string> = {
   pending: 'bg-slate-900/30 text-slate-300',
   in_transit: 'bg-blue-900/30 text-blue-300',
   delivered: 'bg-green-900/30 text-green-300',
-  received: 'bg-purple-900/30 text-purple-300',
-  discrepancy: 'bg-red-900/30 text-red-300',
+  shipped: 'bg-indigo-900/30 text-indigo-300',
+  returned: 'bg-amber-900/30 text-amber-300',
+  lost: 'bg-red-900/30 text-red-300',
 };
 
 export default function Shipments() {
-  const { /* role */ _ } = useAuth();
   const [shipments, setShipments] = useState<any[]>([]);
   const [sites, setSites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +45,7 @@ export default function Shipments() {
     manufacturer: 'Canopus BioPharma',
     drug_name: 'PTP-102',
     strength: '100mg/mL',
-    quantity_shipped: '',
+    quantity_shipped: 0,
     quantity_received: 0,
     shipment_date: new Date().toISOString().split('T')[0],
     expected_delivery: '',
@@ -63,7 +62,7 @@ export default function Shipments() {
     volume_ml: 10,
     concentration_mg_ml: 100,
     expiry_date: '',
-    status: 'received' as BottleStatus,
+    status: 'in_stock' as BottleStatus,
     storage_location: '',
   });
 

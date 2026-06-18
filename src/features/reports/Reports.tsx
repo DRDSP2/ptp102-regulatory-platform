@@ -4,7 +4,7 @@ import { getAllPatients, getAEsForPatient, submitFdaReport } from '../../lib/api
 import { FileText, Download, Send, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Reports() {
-  const { /* role */ _ } = useAuth();
+  const { role } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [patientAEs, setPatientAEs] = useState<any[]>([]);

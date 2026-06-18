@@ -75,7 +75,7 @@ export async function getAllPatients() {
 export async function getPatientById(id: string) {
   const { data, error } = await supabase
     .from('patients')
-    .select('*, veterinarians(*), sites(*)')
+    .select('*, veterinarians(*), sites(*)' as any)
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -85,7 +85,7 @@ export async function getPatientById(id: string) {
 export async function createPatient(patient: Partial<Patient>) {
   const { data, error } = await supabase
     .from('patients')
-    .insert(patient)
+    .insert(patient as any)
     .select()
     .single();
   if (error) throw error;
@@ -95,7 +95,7 @@ export async function createPatient(patient: Partial<Patient>) {
 export async function updatePatient(id: string, patient: Partial<Patient>) {
   const { data, error } = await supabase
     .from('patients')
-    .update({ ...patient, updated_at: new Date().toISOString() })
+    .update({ ...patient, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -106,7 +106,7 @@ export async function updatePatient(id: string, patient: Partial<Patient>) {
 export async function softDeletePatient(id: string) {
   const { error } = await supabase
     .from('patients')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ deleted_at: new Date().toISOString() } as any)
     .eq('id', id);
   if (error) throw error;
 }
@@ -114,16 +114,16 @@ export async function softDeletePatient(id: string) {
 export async function lockPatient(id: string, vetId: string) {
   const { error } = await supabase
     .from('patients')
-    .update({ status: 'locked', locked_at: new Date().toISOString(), locked_by: vetId })
-    .eq('id', id);
+    .update({ status: 'locked', locked_at: new Date().toISOString(), locked_by: vetId } as any)
+    .eq('id', id as any);
   if (error) throw error;
 }
 
 export async function freezePatient(id: string, vetId: string) {
   const { error } = await supabase
     .from('patients')
-    .update({ status: 'frozen', frozen_at: new Date().toISOString(), frozen_by: vetId })
-    .eq('id', id);
+    .update({ status: 'frozen', frozen_at: new Date().toISOString(), frozen_by: vetId } as any)
+    .eq('id', id as any);
   if (error) throw error;
 }
 
@@ -142,7 +142,7 @@ export async function getTreatmentsForPatient(patientId: string) {
 export async function createTreatment(treatment: Partial<Treatment>) {
   const { data, error } = await supabase
     .from('treatments')
-    .insert(treatment)
+    .insert(treatment as any)
     .select()
     .single();
   if (error) throw error;
@@ -152,7 +152,7 @@ export async function createTreatment(treatment: Partial<Treatment>) {
 export async function updateTreatment(id: string, treatment: Partial<Treatment>) {
   const { data, error } = await supabase
     .from('treatments')
-    .update({ ...treatment, updated_at: new Date().toISOString() })
+    .update({ ...treatment, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -175,7 +175,7 @@ export async function getAssessmentsForPatient(patientId: string) {
 export async function createAssessment(assessment: Partial<ClinicalAssessment>) {
   const { data, error } = await supabase
     .from('clinical_assessments')
-    .insert(assessment)
+    .insert(assessment as any)
     .select()
     .single();
   if (error) throw error;
@@ -185,7 +185,7 @@ export async function createAssessment(assessment: Partial<ClinicalAssessment>) 
 export async function updateAssessment(id: string, assessment: Partial<ClinicalAssessment>) {
   const { data, error } = await supabase
     .from('clinical_assessments')
-    .update(assessment)
+    .update(assessment as any)
     .eq('id', id)
     .select()
     .single();
@@ -208,7 +208,7 @@ export async function getOutcomesForPatient(patientId: string) {
 export async function createOutcome(outcome: Partial<TreatmentOutcome>) {
   const { data, error } = await supabase
     .from('treatment_outcomes')
-    .insert(outcome)
+    .insert(outcome as any)
     .select()
     .single();
   if (error) throw error;
@@ -230,7 +230,7 @@ export async function getLabsForPatient(patientId: string) {
 export async function createLabResult(lab: Partial<LabResult>) {
   const { data, error } = await supabase
     .from('lab_results')
-    .insert(lab)
+    .insert(lab as any)
     .select()
     .single();
   if (error) throw error;
@@ -252,7 +252,7 @@ export async function getVideosForPatient(patientId: string) {
 export async function createVideo(video: Partial<Video>) {
   const { data, error } = await supabase
     .from('videos')
-    .insert(video)
+    .insert(video as any)
     .select()
     .single();
   if (error) throw error;
@@ -274,7 +274,7 @@ export async function getNotesForPatient(patientId: string) {
 export async function createNote(note: Partial<ClinicalNote>) {
   const { data, error } = await supabase
     .from('clinical_notes')
-    .insert(note)
+    .insert(note as any)
     .select()
     .single();
   if (error) throw error;
@@ -284,7 +284,7 @@ export async function createNote(note: Partial<ClinicalNote>) {
 export async function updateNote(id: string, note: Partial<ClinicalNote>) {
   const { data, error } = await supabase
     .from('clinical_notes')
-    .update({ ...note, updated_at: new Date().toISOString() })
+    .update({ ...note, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -307,7 +307,7 @@ export async function getAEsForPatient(patientId: string) {
 export async function createAE(ae: Partial<AdverseEvent>) {
   const { data, error } = await supabase
     .from('adverse_events')
-    .insert(ae)
+    .insert(ae as any)
     .select()
     .single();
   if (error) throw error;
@@ -317,7 +317,7 @@ export async function createAE(ae: Partial<AdverseEvent>) {
 export async function updateAE(id: string, ae: Partial<AdverseEvent>) {
   const { data, error } = await supabase
     .from('adverse_events')
-    .update({ ...ae, updated_at: new Date().toISOString() })
+    .update({ ...ae, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -340,7 +340,7 @@ export async function getDeviationsForPatient(patientId: string) {
 export async function createDeviation(deviation: Partial<ProtocolDeviation>) {
   const { data, error } = await supabase
     .from('protocol_deviations')
-    .insert(deviation)
+    .insert(deviation as any)
     .select()
     .single();
   if (error) throw error;
@@ -362,7 +362,7 @@ export async function getScreeningForPatient(patientId: string) {
 export async function createScreening(screening: Partial<EligibilityScreening>) {
   const { data, error } = await supabase
     .from('eligibility_screenings')
-    .insert(screening)
+    .insert(screening as any)
     .select()
     .single();
   if (error) throw error;
@@ -384,7 +384,7 @@ export async function getConsentForPatient(patientId: string) {
 export async function createConsent(consent: Partial<InformedConsent>) {
   const { data, error } = await supabase
     .from('informed_consents')
-    .insert(consent)
+    .insert(consent as any)
     .select()
     .single();
   if (error) throw error;
@@ -394,8 +394,8 @@ export async function createConsent(consent: Partial<InformedConsent>) {
 export async function updateConsent(id: string, consent: Partial<InformedConsent>) {
   const { data, error } = await supabase
     .from('informed_consents')
-    .update(consent)
-    .eq('id', id)
+    .update(consent as any)
+    .eq('id', id as any)
     .select()
     .single();
   if (error) throw error;
@@ -406,17 +406,17 @@ export async function updateConsent(id: string, consent: Partial<InformedConsent
 export async function getSites() {
   const { data, error } = await supabase
     .from('sites')
-    .select('*, veterinarians(*)')
+    .select('*, veterinarians(*)' as any)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return (data ?? []) as (Site & { veterinarians: Veterinarian })[];
+  return (data ?? []) as any[];
 }
 
 export async function createSite(site: Partial<Site>) {
   const { data, error } = await supabase
     .from('sites')
-    .insert(site)
+    .insert(site as any)
     .select()
     .single();
   if (error) throw error;
@@ -427,7 +427,7 @@ export async function createSite(site: Partial<Site>) {
 export async function getShipments() {
   const { data, error } = await supabase
     .from('drug_shipments')
-    .select('*, sites(*), bottle_inventory(*)')
+    .select('*, sites(*), bottle_inventory(*)' as any)
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -437,7 +437,7 @@ export async function getShipments() {
 export async function createShipment(shipment: Partial<DrugShipment>) {
   const { data, error } = await supabase
     .from('drug_shipments')
-    .insert(shipment)
+    .insert(shipment as any)
     .select()
     .single();
   if (error) throw error;
@@ -447,7 +447,7 @@ export async function createShipment(shipment: Partial<DrugShipment>) {
 export async function updateShipment(id: string, shipment: Partial<DrugShipment>) {
   const { data, error } = await supabase
     .from('drug_shipments')
-    .update({ ...shipment, updated_at: new Date().toISOString() })
+    .update({ ...shipment, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -469,7 +469,7 @@ export async function getBottlesForShipment(shipmentId: string) {
 export async function createBottle(bottle: Partial<BottleInventory>) {
   const { data, error } = await supabase
     .from('bottle_inventory')
-    .insert(bottle)
+    .insert(bottle as any)
     .select()
     .single();
   if (error) throw error;
@@ -479,7 +479,7 @@ export async function createBottle(bottle: Partial<BottleInventory>) {
 export async function updateBottle(id: string, bottle: Partial<BottleInventory>) {
   const { data, error } = await supabase
     .from('bottle_inventory')
-    .update({ ...bottle, updated_at: new Date().toISOString() })
+    .update({ ...bottle, updated_at: new Date().toISOString() } as any)
     .eq('id', id)
     .select()
     .single();
@@ -502,7 +502,7 @@ export async function getStorageForSite(siteId: string) {
 export async function createStorage(storage: Partial<StorageConfirmation>) {
   const { data, error } = await supabase
     .from('storage_confirmations')
-    .insert(storage)
+    .insert(storage as any)
     .select()
     .single();
   if (error) throw error;
@@ -523,7 +523,7 @@ export async function getStudySettings() {
 export async function updateStudySettings(settings: Partial<StudySettings>) {
   const { data, error } = await supabase
     .from('study_settings')
-    .upsert({ ...settings, updated_at: new Date().toISOString() })
+    .upsert({ ...settings, updated_at: new Date().toISOString() } as any)
     .select()
     .single();
   if (error) throw error;
@@ -544,8 +544,8 @@ export async function getAllVeterinarians() {
 export async function approveVeterinarian(id: string, approvedBy: string) {
   const { data, error } = await supabase
     .from('veterinarians')
-    .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: approvedBy })
-    .eq('id', id)
+    .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: approvedBy } as any)
+    .eq('id', id as any)
     .select()
     .single();
   if (error) throw error;
@@ -555,8 +555,8 @@ export async function approveVeterinarian(id: string, approvedBy: string) {
 export async function suspendVeterinarian(id: string) {
   const { data, error } = await supabase
     .from('veterinarians')
-    .update({ status: 'suspended' })
-    .eq('id', id)
+    .update({ status: 'suspended' } as any)
+    .eq('id', id as any)
     .select()
     .single();
   if (error) throw error;

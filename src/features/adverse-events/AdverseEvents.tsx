@@ -30,7 +30,7 @@ const outcomeColors: Record<AEOutcome, string> = {
 };
 
 export default function AdverseEvents() {
-  const { /* vet */ _ } = useAuth();
+  const { role } = useAuth();
   const [patients, setPatients] = useState<any[]>([]);
   const [aes, setAEs] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);

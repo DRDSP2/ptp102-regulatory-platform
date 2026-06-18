@@ -1,27 +1,33 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './hooks/use-auth';
-import { Login } from './features/login/Login';
-import { Dashboard } from './features/dashboard/Dashboard';
-import { DashboardLayout } from './features/dashboard/DashboardLayout';
-import { Patients } from './features/patients/Patients';
-import { ConsentWorkflow } from './features/consent/ConsentWorkflow';
-import { AdverseEvents } from './features/adverse-events/AdverseEvents';
-import { Shipments } from './features/shipments/Shipments';
-import { Settings } from './features/settings/Settings';
-import { AuditLogs } from './features/audit/AuditLogs';
-import { Reports } from './features/reports/Reports';
-import { VeterinarianDashboard } from './features/veterinarians/VeterinarianDashboard';
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import Login from '../features/login/Login';
+import Dashboard from '../features/dashboard/Dashboard';
+import { DashboardLayout } from '../features/dashboard/DashboardLayout';
+import Patients from '../features/patients/Patients';
+import ConsentWorkflow from '../features/consent/ConsentWorkflow';
+import AdverseEvents from '../features/adverse-events/AdverseEvents';
+import Shipments from '../features/shipments/Shipments';
+import Settings from '../features/settings/Settings';
+import AuditLogs from '../features/audit/AuditLogs';
+import Reports from '../features/reports/Reports';
+import VeterinarianDashboard from '../features/veterinarians/VeterinarianDashboard';
+import { useAuth } from '../hooks/use-auth';
+
+type RolesProps = {
+  children: React.ReactNode;
+};
+
+function RequireAuth({ children }: RolesProps) {
+  const { status } = useAuth();
+  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950">Loading...</div>;
+  if (status === 'guest') return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-function RequireRole({ allowedRoles, children }: { allowedRoles: string[]; children: React.ReactNode }) {
-  const { role, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+function RequireRole({ allowedRoles, children }: RolesProps & { allowedRoles: string[] }) {
+  const { status, role } = useAuth();
+  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950">Loading...</div>;
+  if (status === 'guest') return <Navigate to="/login" replace />;
   if (!allowedRoles.includes(role || '')) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-400">
@@ -39,7 +45,7 @@ function RequireRole({ allowedRoles, children }: { allowedRoles: string[]; child
 function AdminRoutes() {
   return (
     <RequireRole allowedRoles={['admin']}>
-      <DashboardLayout>
+      <DashboardLayout title="Admin">
         <Routes>
           <Route path="patients" element={<Patients />} />
           <Route path="consent" element={<ConsentWorkflow />} />
@@ -48,7 +54,7 @@ function AdminRoutes() {
           <Route path="audit" element={<AuditLogs />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/patients" replace />} />
         </Routes>
       </DashboardLayout>
     </RequireRole>
@@ -58,7 +64,7 @@ function AdminRoutes() {
 function VetRoutes() {
   return (
     <RequireRole allowedRoles={['vet']}>
-      <DashboardLayout>
+      <DashboardLayout title="Vet">
         <Routes>
           <Route path="dashboard" element={<VeterinarianDashboard />} />
           <Route path="patients" element={<VeterinarianDashboard />} />
@@ -70,17 +76,20 @@ function VetRoutes() {
 }
 
 export function App() {
-  const { loading } = useAuth();
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950">Loading...</div>;
-  }
+  const { status } = useAuth();
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Navigate to="/dashboard" replace />
+            </RequireAuth>
+          }
+        />
         <Route element={<RequireAuth><Outlet /></RequireAuth>}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route element={<AdminRoutes />} />
