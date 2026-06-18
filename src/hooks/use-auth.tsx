@@ -68,6 +68,8 @@ export function useAuth() {
     status: ctx.status,
     role: ctx.role,
     user,
+    vet: ctx.vet,
+    signIn: ctx.signIn,
     signOut: ctx.signOut,
   };
 }
