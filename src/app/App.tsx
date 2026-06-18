@@ -1,27 +1,27 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from './hooks/use-auth';
-import { Login } from './features/login/Login';
-import { Dashboard } from './features/dashboard/Dashboard';
-import { DashboardLayout } from './features/dashboard/DashboardLayout';
-import { Patients } from './features/patients/Patients';
-import { ConsentWorkflow } from './features/consent/ConsentWorkflow';
-import { AdverseEvents } from './features/adverse-events/AdverseEvents';
-import { Shipments } from './features/shipments/Shipments';
-import { Settings } from './features/settings/Settings';
-import { AuditLogs } from './features/audit/AuditLogs';
-import { Reports } from './features/reports/Reports';
-import { VeterinarianDashboard } from './features/veterinarians/VeterinarianDashboard';
+import { useAuth } from '../hooks/use-auth';
+import Login from '../features/login/Login';
+import Dashboard from '../features/dashboard/Dashboard';
+import { DashboardLayout } from '../features/dashboard/DashboardLayout';
+import Patients from '../features/patients/Patients';
+import ConsentWorkflow from '../features/consent/ConsentWorkflow';
+import AdverseEvents from '../features/adverse-events/AdverseEvents';
+import Shipments from '../features/shipments/Shipments';
+import Settings from '../features/settings/Settings';
+import AuditLogs from '../features/audit/AuditLogs';
+import Reports from '../features/reports/Reports';
+import VeterinarianDashboard from '../features/veterinarians/VeterinarianDashboard';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  const { status } = useAuth();
+  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
+  if (status !== 'authenticated') return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function RequireRole({ allowedRoles, children }: { allowedRoles: string[]; children: React.ReactNode }) {
-  const { role, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  const { status, role } = useAuth();
+  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
   if (!allowedRoles.includes(role || '')) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-400">
@@ -39,7 +39,7 @@ function RequireRole({ allowedRoles, children }: { allowedRoles: string[]; child
 function AdminRoutes() {
   return (
     <RequireRole allowedRoles={['admin']}>
-      <DashboardLayout>
+      <DashboardLayout title="PTP-102 Admin">
         <Routes>
           <Route path="patients" element={<Patients />} />
           <Route path="consent" element={<ConsentWorkflow />} />
@@ -58,7 +58,7 @@ function AdminRoutes() {
 function VetRoutes() {
   return (
     <RequireRole allowedRoles={['vet']}>
-      <DashboardLayout>
+      <DashboardLayout title="PTP-102 Vet">
         <Routes>
           <Route path="dashboard" element={<VeterinarianDashboard />} />
           <Route path="patients" element={<VeterinarianDashboard />} />
@@ -70,10 +70,10 @@ function VetRoutes() {
 }
 
 export function App() {
-  const { loading } = useAuth();
+  const { status } = useAuth();
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950">Loading...</div>;
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
   }
 
   return (
