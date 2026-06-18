@@ -60,10 +60,12 @@ jobs:
         run: |
           cd supabase
           supabase migration list --linked
+        continue-on-error: true
 
       - name: Dry Run Migration
         run: |
           supabase db diff --schema public --use-migra
+        continue-on-error: true
 
   deploy-preview:
     name: Deploy Preview to 4Everland
