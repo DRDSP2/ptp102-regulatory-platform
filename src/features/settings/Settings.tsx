@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/use-auth';
-import { getStudySettings, updateStudySettings, getSites, createSite, getAllVeterinarians, approveVeterinarian, suspendVeterinarian } from '../../lib/api';
-import { Settings as SettingsIcon, Save, AlertCircle, Shield, Database, Key, Globe, CheckCircle, UserCheck, UserX } from 'lucide-react';
+import { getSites } from '../../lib/api';
+import { Settings as SettingsIcon, AlertCircle, Shield, Database, CheckCircle } from 'lucide-react';
 
 type Tab = 'study' | 'vets' | 'integrations' | 'compliance';
 
 export default function Settings() {
-  const { role } = useAuth();
+  const { role: _role } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('study');
   const [settings, setSettings] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [sites, setSites] = useState<any[]>([]);
+  const [_sites, setSites] = useState<any[]>([]);
   const [vets, setVets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -17,8 +17,6 @@ export default function Patients() {
   const [form, setForm] = useState({ horse_name: '', breed: '', age_years: '', age_months: '', sex: '', weight_kg: '', owner_name: '', owner_phone: '', owner_email: '', site_id: '', veterinarian_id: '' });
   const [rows, setRows] = useState<Record<string, any>>({});
 
-  useEffect(() => { load(); }, []);
-
   const load = async () => {
     setLoading(true);
     try {
@@ -27,6 +25,8 @@ export default function Patients() {
       setSites(s ?? []);
     } finally { setLoading(false); }
   };
+
+  useEffect(() => { load(); }, []);
 
   const open = async (p: PatientRow) => {
     setSelected(p);

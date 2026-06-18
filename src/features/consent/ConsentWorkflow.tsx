@@ -9,8 +9,8 @@ import {
 import { FileText, ExternalLink } from 'lucide-react';
 
 export default function ConsentWorkflow() {
-  const { role } = useAuth();
-  const [consents, setConsents] = useState<any[]>([]);
+  const { role: _role } = useAuth();
+  const [_consents, _setConsents] = useState<any[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [/* consent */ _, _setConsent] = useState<any | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -94,6 +94,7 @@ export default function ConsentWorkflow() {
 
   const handleDownload = () => {
     if (signaturePadRef.current) {
+      // eslint-disable-next-line react-hooks/purity
       timestampRef.current = Date.now();
       const link = document.createElement('a');
       link.download = `signature-${timestampRef.current}.png`;

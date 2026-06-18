@@ -4,7 +4,7 @@ import { getAuditLogs } from '../../lib/api';
 import { ChevronLeft, ChevronRight, Database, User } from 'lucide-react';
 
 export default function AuditLogs() {
-  const { role } = useAuth();
+  const { role: _role } = useAuth();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
