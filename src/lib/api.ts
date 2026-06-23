@@ -51,6 +51,26 @@ export async function getAdministrator(id: string) {
   return data as Administrator;
 }
 
+export async function getVeterinarianByEmail(email: string) {
+  const { data, error } = await supabase
+    .from('veterinarians')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle();
+  if (error) throw error;
+  return data as Veterinarian | null;
+}
+
+export async function getAdministratorByEmail(email: string) {
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle();
+  if (error) throw error;
+  return data as any;
+}
+
 export async function getPatientsForVet(vetId: string) {
   const { data, error } = await supabase
     .from('patients')

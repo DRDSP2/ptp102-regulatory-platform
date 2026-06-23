@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabase';
 import {
   signInWithPassword,
   signOut as apiSignOut,
-  getVeterinarian,
-  getAdministrator,
+  getVeterinarianByEmail,
+  getAdministratorByEmail,
 } from '../lib/api';
 
 type Role = 'vet' | 'admin';
@@ -38,15 +38,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let vet: any = undefined;
       let admin: any = undefined;
-      try {
-        vet = await getVeterinarian(uid);
-      } catch (_vetErr) {
-        // vet record may not exist for non-vet users
-      }
-      try {
-        admin = await getAdministrator(uid);
-      } catch (_adminErr) {
-        // admin record may not exist for non-admin users
+      if (email) {
+        try {
+          vet = await getVeterinarianByEmail(email);
+        } catch (_vetErr) {
+          // vet profile may not exist for non-vet users
+        }
+        try {
+          admin = await getAdministratorByEmail(email);
+        } catch (_adminErr) {
+          // admin profile may not exist for non-admin users
+        }
       }
 
       const role: Role = admin ? 'admin' : 'vet';
@@ -61,15 +63,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let vet: any = undefined;
     let admin: any = undefined;
-    try {
-      vet = await getVeterinarian(uid);
-    } catch (_vetErr) {
-      // non-vet or missing profile
-    }
-    try {
-      admin = await getAdministrator(uid);
-    } catch (_adminErr) {
-      // non-admin or missing profile
+    if (userEmail) {
+      try {
+        vet = await getVeterinarianByEmail(userEmail);
+      } catch (_vetErr) {
+        // non-vet or missing profile
+      }
+      try {
+        admin = await getAdministratorByEmail(userEmail);
+      } catch (_adminErr) {
+        // non-admin or missing profile
+      }
     }
 
     const role: Role = admin ? 'admin' : 'vet';
