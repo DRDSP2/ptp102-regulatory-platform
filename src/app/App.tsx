@@ -11,6 +11,7 @@ import Settings from '../features/settings/Settings';
 import AuditLogs from '../features/audit/AuditLogs';
 import Reports from '../features/reports/Reports';
 import VeterinarianDashboard from '../features/veterinarians/VeterinarianDashboard';
+import DealRoom from '../features/dealroom/DealRoom';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
@@ -83,6 +84,7 @@ export function App() {
         <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
         <Route element={<RequireAuth><Outlet /></RequireAuth>}>
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="deal-room" element={<DealRoom />} />
           <Route element={<AdminRoutes />} />
           <Route element={<VetRoutes />} />
         </Route>
