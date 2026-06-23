@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 export default function VeterinarianDashboard() {
+  const navigate = useNavigate();
   const [vetId, setVetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<any[]>([]);
@@ -69,6 +71,16 @@ export default function VeterinarianDashboard() {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">Veterinarian Dashboard</h2>
+        <button
+          onClick={() => navigate('/vet/deal-room')}
+          className="inline-flex items-center gap-2 rounded bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-400"
+        >
+          <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-white/20 text-[10px]">🚪</span>
+          Deal Room
+        </button>
+      </div>
       {!selected ? (
         <>
           <div className="grid gap-4 sm:grid-cols-3">

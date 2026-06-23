@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import Login from '../features/login/Login';
+import TrialPortal from '../features/login/TrialPortal';
 import Dashboard from '../features/dashboard/Dashboard';
 import { DashboardLayout } from '../features/dashboard/DashboardLayout';
 import Patients from '../features/patients/Patients';
@@ -81,12 +82,12 @@ export function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
+      <Route path="/login" element={<TrialPortal />} />
+      <Route path="/" element={status === 'authenticated' ? <Navigate to="/dashboard" replace /> : <TrialPortal />} />
+      <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
       <Route element={<RequireAuth><Outlet /></RequireAuth>}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route element={<AdminRoutes />} />
-        <Route element={<VetRoutes />} />
+        <Route path="admin/*" element={<AdminRoutes />} />
+        <Route path="vet/*" element={<VetRoutes />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
