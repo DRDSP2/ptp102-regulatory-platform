@@ -78,18 +78,16 @@ export function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
-        <Route element={<RequireAuth><Outlet /></RequireAuth>}>
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="deal-room" element={<DealRoom />} />
-          <Route element={<AdminRoutes />} />
-          <Route element={<VetRoutes />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
+      <Route element={<RequireAuth><Outlet /></RequireAuth>}>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="deal-room" element={<DealRoom />} />
+        <Route element={<AdminRoutes />} />
+        <Route element={<VetRoutes />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
