@@ -186,6 +186,7 @@ export default function DealRoom() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
+    const authRole = (user.role as UserProfile['role']) || 'admin';
     return (
       raw
         ? JSON.parse(raw)
@@ -193,7 +194,7 @@ export default function DealRoom() {
             id: user.id,
             email: user.email || '',
             company: '',
-            role: 'prospect',
+            role: authRole,
             tier: 'diligence',
           }
     );

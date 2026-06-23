@@ -49,6 +49,7 @@ function AdminRoutes() {
           <Route path="audit" element={<AuditLogs />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="deal-room/*" element={<DealRoom />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </DashboardLayout>
@@ -63,6 +64,7 @@ function VetRoutes() {
         <Routes>
           <Route path="dashboard" element={<VeterinarianDashboard />} />
           <Route path="patients" element={<VeterinarianDashboard />} />
+          <Route path="deal-room/*" element={<DealRoom />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </DashboardLayout>
@@ -83,7 +85,6 @@ export function App() {
       <Route path="/" element={<RequireAuth><Navigate to="/dashboard" replace /></RequireAuth>} />
       <Route element={<RequireAuth><Outlet /></RequireAuth>}>
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="deal-room" element={<DealRoom />} />
         <Route element={<AdminRoutes />} />
         <Route element={<VetRoutes />} />
       </Route>
