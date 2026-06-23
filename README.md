@@ -240,4 +240,4 @@ npm run db:diff      # Check migration diff
 
 ## 📄 License
 
-Proprietary — Byrock Technologies Ltd / Canopus BioPharma. All rights reserved.
+Proprietary — Byrock Technologies Ltd / Canopus BioPharma. All rights reserved.# redeploy trigger
