@@ -35,8 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data.session) return setSession({ status: 'guest', role: null, user: { id: '', email: null } });
       const uid = data.session.user.id;
       const email = data.session.user.email ?? null;
-      const vet = await getVeterinarian(uid).catch(() => undefined);
-      const admin = await getAdministrator(uid).catch(() => undefined);
+
+      let vet: any = undefined;
+      let admin: any = undefined;
+      try {
+        vet = await getVeterinarian(uid);
+      } catch (_vetErr) {
+        // vet record may not exist for non-vet users
+      }
+      try {
+        admin = await getAdministrator(uid);
+      } catch (_adminErr) {
+        // admin record may not exist for non-admin users
+      }
+
       const role: Role = admin ? 'admin' : 'vet';
       setSession({ status: 'authenticated', role, user: { id: uid, email }, vet, admin });
     })();
@@ -46,8 +58,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await signInWithPassword(email, password);
     const uid = data.session.user.id;
     const userEmail = data.session.user.email ?? null;
-    const vet = await getVeterinarian(uid).catch(() => undefined);
-    const admin = await getAdministrator(uid).catch(() => undefined);
+
+    let vet: any = undefined;
+    let admin: any = undefined;
+    try {
+      vet = await getVeterinarian(uid);
+    } catch (_vetErr) {
+      // non-vet or missing profile
+    }
+    try {
+      admin = await getAdministrator(uid);
+    } catch (_adminErr) {
+      // non-admin or missing profile
+    }
+
     const role: Role = admin ? 'admin' : 'vet';
     setSession({ status: 'authenticated', role, user: { id: uid, email: userEmail }, vet, admin });
   };
