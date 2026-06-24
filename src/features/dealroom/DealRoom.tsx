@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { LayoutDashboard, FolderOpen, FileText, Globe2, PieChart, Presentation, LogOut, Shield, ChevronLeft, ChevronRight, Save, Send, Plus, X, Search, Download, Lock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
-import { supabase } from '../../lib/supabase';
 
 type Tier = 'none' | 'evaluation' | 'diligence' | 'exclusive';
 type Role = 'prospect' | 'investor' | 'regulatory' | 'auditor' | 'admin' | 'vet';

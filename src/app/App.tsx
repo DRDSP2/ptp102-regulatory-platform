@@ -1,6 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
-import Login from '../features/login/Login';
 import TrialPortal from '../features/login/TrialPortal';
 import Dashboard from '../features/dashboard/Dashboard';
 import { DashboardLayout } from '../features/dashboard/DashboardLayout';
