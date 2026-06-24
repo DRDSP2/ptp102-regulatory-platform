@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <rect width="800" height="600" fill="#0a0f1a"/>
+  <text x="400" y="280" text-anchor="middle" fill="#00f0ff" font-size="24" font-family="Orbitron, sans-serif" opacity="0.8">REFERENCE X-RAY</text>
+  <text x="400" y="320" text-anchor="middle" fill="#38bdf8" font-size="16" font-family="JetBrains Mono, monospace" opacity="0.6">LATEROMEDIAL VIEW</text>
+  <text x="400" y="360" text-anchor="middle" fill="#57606f" font-size="14" font-family="JetBrains Mono, monospace">Upload actual X-ray image to replace this placeholder</text>
+  <!-- Simple hoof outline -->
+  <path d="M 350 200 Q 320 250 330 300 Q 340 350 360 380 Q 380 400 420 400 Q 460 400 480 380 Q 500 350 490 300 Q 480 250 450 200 Z" fill="none" stroke="#00f0ff" stroke-width="1" opacity="0.3"/>
+  <path d="M 360 220 Q 340 260 350 300 Q 360 340 380 360 Q 400 380 420 380 Q 440 380 460 360 Q 480 340 470 300 Q 460 260 440 220" fill="none" stroke="#00f0ff" stroke-width="0.5" opacity="0.2"/>
+  <!-- P3 bone outline -->
+  <path d="M 370 240 Q 360 280 370 320 Q 380 360 400 370 Q 420 360 430 320 Q 440 280 430 240 Z" fill="none" stroke="#38bdf8" stroke-width="0.5" opacity="0.2"/>
+  <!-- Grid lines -->
+  <line x1="100" y1="300" x2="700" y2="300" stroke="#00f0ff" stroke-width="0.2" opacity="0.1"/>
+  <line x1="400" y1="100" x2="400" y2="500" stroke="#00f0ff" stroke-width="0.2" opacity="0.1"/>
+</svg>

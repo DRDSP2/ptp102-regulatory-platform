@@ -12,6 +12,7 @@ import AuditLogs from '../features/audit/AuditLogs';
 import Reports from '../features/reports/Reports';
 import VeterinarianDashboard from '../features/veterinarians/VeterinarianDashboard';
 import DealRoom from '../features/dealroom/DealRoom';
+import VisualAid from '../features/visual-aid/VisualAid';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
@@ -50,6 +51,7 @@ function AdminRoutes() {
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="deal-room/*" element={<DealRoom />} />
+          <Route path="visual-aid" element={<VisualAid />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </DashboardLayout>
@@ -65,6 +67,7 @@ function VetRoutes() {
           <Route path="dashboard" element={<VeterinarianDashboard />} />
           <Route path="patients" element={<VeterinarianDashboard />} />
           <Route path="deal-room/*" element={<DealRoom />} />
+          <Route path="visual-aid" element={<VisualAid />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </DashboardLayout>
