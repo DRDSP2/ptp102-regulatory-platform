@@ -153,13 +153,22 @@ export default function TrialPortal() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
-            <button
-              type="button"
-              onClick={() => setMode('select')}
-              className="w-full text-xs text-slate-400 hover:text-slate-200"
-            >
-              ← Back
-            </button>
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={() => navigate('/reset-password')}
+                className="text-amber-300 hover:underline"
+              >
+                Forgot password?
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('select')}
+                className="text-slate-400 hover:text-slate-200"
+              >
+                ← Back
+              </button>
+            </div>
           </form>
         ) : null}
       </div>
