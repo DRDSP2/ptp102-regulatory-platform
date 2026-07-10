@@ -658,7 +658,6 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
     </div>
   );
 }
-}
 
 function PitchView() {
   const [idx, setIdx] = useState(0);
@@ -756,7 +755,6 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
       </div>
     </div>
   );
-}
 }
 
 function DataRoomView({ profile }: { profile: UserProfile }) {
@@ -876,7 +874,6 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
       </div>
     </div>
   );
-}
 }
 
 function TermSheetView({
@@ -1093,7 +1090,6 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
     </div>
   );
 }
-}
 
 function MarketplaceView({ onCreate }: { onCreate: (r: Region) => void }) {
   const [selected, setSelected] = useState<Region | null>(null);
@@ -1196,7 +1192,6 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
       </div>
     </div>
   );
-}
 }
 
 function CapTableView() {
@@ -1313,4 +1308,4 @@ function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: 
     </div>
   );
 }
-}
+

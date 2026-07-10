@@ -2,7 +2,6 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import TrialPortal from '../features/login/TrialPortal';
 import ResetPassword from '../features/login/ResetPassword';
-import Dashboard from '../features/dashboard/Dashboard';
 import { DashboardLayout } from '../features/dashboard/DashboardLayout';
 import Patients from '../features/patients/Patients';
 import ConsentWorkflow from '../features/consent/ConsentWorkflow';
