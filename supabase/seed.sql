@@ -55,3 +55,13 @@ VALUES
         'Dr. Daniel Shanahan-Prendergast',
         'super_admin'
     );
+
+INSERT INTO public.deal_room_owners (id, company_name, contact_name, email, deal_tier, deal_status)
+VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'eClinic / Byrock',
+  'Dr. Daniel Shanahan-Prendergast',
+  'drdsp@pm.me',
+  'owner',
+  'active'
+) ON CONFLICT (email) DO NOTHING;

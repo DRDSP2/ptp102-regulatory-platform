@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import TrialPortal from '../features/login/TrialPortal';
+import ResetPassword from '../features/login/ResetPassword';
 import Dashboard from '../features/dashboard/Dashboard';
 import { DashboardLayout } from '../features/dashboard/DashboardLayout';
 import Patients from '../features/patients/Patients';
@@ -66,7 +67,6 @@ function VetRoutes() {
         <Routes>
           <Route path="dashboard" element={<VeterinarianDashboard />} />
           <Route path="patients" element={<VeterinarianDashboard />} />
-          <Route path="deal-room/*" element={<DealRoom />} />
           <Route path="visual-aid" element={<VisualAid />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
@@ -75,23 +75,48 @@ function VetRoutes() {
   );
 }
 
+function DealRoutes() {
+  return (
+    <RequireRole allowedRoles={['admin', 'deal']}>
+      <DashboardLayout title="Deal Room">
+        <Routes>
+          <Route path="dashboard" element={<DealRoom />} />
+          <Route path="data-room" element={<DealRoom page="data-room" />} />
+          <Route path="term-sheet" element={<DealRoom page="term-sheet" />} />
+          <Route path="transactions" element={<DealRoom page="transactions" />} />
+          <Route path="*" element={<DealRoom />} />
+        </Routes>
+      </DashboardLayout>
+    </RequireRole>
+  );
+}
+
 export function App() {
-  const { status } = useAuth();
+  const { status, role } = useAuth();
 
   if (status === 'loading') {
     return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
   }
 
+  const roleHome = () => {
+    if (role === 'deal') return '/deal/dashboard';
+    if (role === 'admin') return '/admin/dashboard';
+    if (role === 'vet') return '/vet/dashboard';
+    return '/login';
+  };
+
   return (
     <Routes>
       <Route path="/login" element={<TrialPortal />} />
-      <Route path="/" element={status === 'authenticated' ? <Navigate to="/dashboard" replace /> : <TrialPortal />} />
-      <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/" element={status === 'authenticated' ? <Navigate to={roleHome()} replace /> : <TrialPortal />} />
+      <Route path="/dashboard" element={<RequireAuth><Navigate to={roleHome()} replace /></RequireAuth>} />
       <Route element={<RequireAuth><Outlet /></RequireAuth>}>
         <Route path="admin/*" element={<AdminRoutes />} />
         <Route path="vet/*" element={<VetRoutes />} />
+        <Route path="deal/*" element={<DealRoutes />} />
       </Route>
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to={roleHome()} replace />} />
     </Routes>
   );
 }

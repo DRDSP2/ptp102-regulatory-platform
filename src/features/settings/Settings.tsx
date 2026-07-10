@@ -198,9 +198,16 @@ function ChangePasswordForm() {
     if (newPass.length < 8) { setMsg('Password must be at least 8 characters.'); return; }
     if (newPass !== confirm) { setMsg('Passwords do not match.'); return; }
     setBusy(true);
-    try { await updateUserPassword(newPass); setMsg('Password updated successfully.'); setNewPass(''); setConfirm(''); }
-    catch (err: any) { setMsg(err.message ?? 'Update failed.'); }
-    finally { setBusy(false); }
+    try {
+      await updateUserPassword(newPass);
+      setMsg('Password updated successfully.');
+      setNewPass('');
+      setConfirm('');
+    } catch (err: any) {
+      setMsg(err.message ?? 'Update failed.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

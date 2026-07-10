@@ -425,3 +425,45 @@ CREATE INDEX idx_audit_user ON public.audit_logs(user_id);
 CREATE INDEX idx_audit_action ON public.audit_logs(action);
 CREATE INDEX idx_audit_table ON public.audit_logs(table_name);
 CREATE INDEX idx_audit_created ON public.audit_logs(created_at);
+
+
+-- ─── Deal Room ───────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.deal_room_owners (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  company_name TEXT NOT NULL,
+  contact_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  phone TEXT,
+  deal_tier TEXT DEFAULT 'exploring',
+  deal_status TEXT DEFAULT 'active',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.deal_room_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES public.deal_room_owners(id) ON DELETE CASCADE,
+  transaction_type TEXT NOT NULL,
+  amount_usd NUMERIC(14,2),
+  currency TEXT DEFAULT 'USD',
+  status TEXT DEFAULT 'pending',
+  notes TEXT,
+  signed_document_url TEXT,
+  approved_at TIMESTAMPTZ,
+  approved_by UUID REFERENCES public.administrators(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_deal_room_transactions_owner ON public.deal_room_transactions(owner_id);
+CREATE INDEX idx_deal_room_transactions_status ON public.deal_room_transactions(status);
+
+ALTER TABLE public.deal_room_owners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deal_room_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "deal_owner_self_read" ON public.deal_room_owners FOR SELECT USING (auth.uid() = id OR auth.role() = 'authenticated');
+CREATE POLICY "deal_owner_admin_write" ON public.deal_room_owners FOR ALL USING (EXISTS (SELECT 1 FROM public.administrators WHERE id = auth.uid() AND role IN ('admin','super_admin')));
+CREATE POLICY "deal_transactions_owner_read" ON public.deal_room_transactions FOR SELECT USING (owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.administrators WHERE id = auth.uid() AND role IN ('admin','super_admin')));
+CREATE POLICY "deal_transactions_owner_insert" ON public.deal_room_transactions FOR INSERT WITH CHECK (owner_id = auth.uid() OR EXISTS (SELECT 1 FROM public.administrators WHERE id = auth.uid() AND role IN ('admin','super_admin')));
+CREATE POLICY "deal_transactions_admin_update" ON public.deal_room_transactions FOR UPDATE USING (EXISTS (SELECT 1 FROM public.administrators WHERE id = auth.uid() AND role IN ('admin','super_admin')));

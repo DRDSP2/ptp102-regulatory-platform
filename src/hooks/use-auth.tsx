@@ -7,7 +7,7 @@ import {
   getAdministratorByEmail,
 } from '../lib/api';
 
-type Role = 'vet' | 'admin';
+type Role = 'vet' | 'admin' | 'deal';
 type User = { id: string; email: string | null };
 
 type Session = {
@@ -38,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let vet: any = undefined;
       let admin: any = undefined;
+      let deal: any = undefined;
       if (email) {
         try {
           vet = await getVeterinarianByEmail(email);
@@ -49,10 +50,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (_adminErr) {
           // admin profile may not exist for non-admin users
         }
+        try {
+          deal = await getDealOwnerByEmail(email);
+        } catch (_dealErr) {
+          // deal profile may not exist for non-deal users
+        }
       }
 
-      const role: Role = admin ? 'admin' : 'vet';
-      setSession({ status: 'authenticated', role, user: { id: uid, email }, vet, admin });
+      const role: Role = admin ? 'admin' : deal ? 'deal' : 'vet';
+      setSession({ status: 'authenticated', role, user: { id: uid, email }, vet, admin, deal });
     })();
   }, []);
 
@@ -63,21 +69,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let vet: any = undefined;
     let admin: any = undefined;
+    let deal: any = undefined;
     if (userEmail) {
       try {
         vet = await getVeterinarianByEmail(userEmail);
-      } catch (_vetErr) {
-        // non-vet or missing profile
-      }
+      } catch (_vetErr) { /* non-vet or missing profile */ }
       try {
         admin = await getAdministratorByEmail(userEmail);
-      } catch (_adminErr) {
-        // non-admin or missing profile
-      }
+      } catch (_adminErr) { /* non-admin or missing profile */ }
+      try {
+        deal = await getDealOwnerByEmail(userEmail);
+      } catch (_dealErr) { /* non-deal or missing profile */ }
     }
 
-    const role: Role = admin ? 'admin' : 'vet';
-    setSession({ status: 'authenticated', role, user: { id: uid, email: userEmail }, vet, admin });
+    const role: Role = admin ? 'admin' : deal ? 'deal' : 'vet';
+    setSession({ status: 'authenticated', role, user: { id: uid, email: userEmail }, vet, admin, deal });
   };
 
   const signOut = async () => {

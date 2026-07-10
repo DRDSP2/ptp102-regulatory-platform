@@ -376,3 +376,28 @@ export async function sendPasswordResetEmail(email: string) {
   });
   if (error) throw error;
 }
+
+// ─── Deal Room ────────────────────────────────────────────────────────
+export async function getDealOwnerByEmail(email: string) {
+  const { data, error } = await supabase.from('deal_room_owners').select('*').eq('email', email).single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getDealTransactions(ownerId: string) {
+  const { data, error } = await supabase.from('deal_room_transactions').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createDealTransaction(ownerId: string, tx: Record<string, any>) {
+  const { data, error } = await supabase.from('deal_room_transactions').insert({ owner_id: ownerId, ...tx }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateDealTransaction(id: string, patch: Record<string, any>) {
+  const { data, error } = await supabase.from('deal_room_transactions').update(patch).eq('id', id).select().single();
+  if (error) throw error;
+  return data;
+}

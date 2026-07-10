@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { LayoutDashboard, FolderOpen, FileText, Globe2, PieChart, Presentation, LogOut, Shield, ChevronLeft, ChevronRight, Save, Send, Plus, X, Search, Download, Lock, CheckCircle2 } from 'lucide-react';
+import { getDealOwnerByEmail, getDealTransactions, createDealTransaction, updateDealTransaction } from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 
 type Tier = 'none' | 'evaluation' | 'diligence' | 'exclusive';
@@ -27,6 +28,21 @@ interface TermSheet {
   status: TermSheetStatus;
   signed_name?: string;
   signed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DealTransaction {
+  id: string;
+  owner_id: string;
+  transaction_type: string;
+  amount_usd?: number;
+  currency: string;
+  status: string;
+  notes?: string;
+  signed_document_url?: string;
+  approved_at?: string;
+  approved_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -199,9 +215,13 @@ export default function DealRoom() {
     );
   });
 
-  const [page, setPage] = useState<
-    'dashboard' | 'pitch' | 'trials' | 'data-room' | 'term-sheet' | 'marketplace' | 'cap-table'
-  >('dashboard');
+  type Page = 'dashboard' | 'pitch' | 'trials' | 'data-room' | 'term-sheet' | 'marketplace' | 'cap-table' | 'transactions';
+  const resolveInitialPage = (): Page => {
+    if (isAdmin) return 'transactions';
+    if (typeof initialPage === 'string' && initialPage) return initialPage as Page;
+    return 'dashboard';
+  };
+  const [page, setPage] = useState<Page>(resolveInitialPage());
 
   const [terms, setTerms] = useState<TermSheet[]>(() => {
     const raw = localStorage.getItem(TERMS_KEY);
@@ -227,8 +247,23 @@ export default function DealRoom() {
   });
 
   useEffect(() => {
-    setProfile((prev) => ({ ...prev, id: user.id, email: user.email || prev.email }));
-  }, [user.id, user.email]);
+    if (!dealEmail) return;
+    getDealOwnerByEmail(dealEmail)
+      .then((owner) => setProfile((prev) => ({ ...prev, ...owner, tier: (owner.deal_tier as Tier) || prev.tier })))
+      .catch(() => {});
+  }, [dealEmail]);
+
+  const [transactions, setTransactions] = useState([]);
+  const [txLoading, setTxLoading] = useState(false);
+
+  useEffect(() => {
+    if (!profile.id || profile.id === '') return;
+    setTxLoading(true);
+    getDealTransactions(profile.id)
+      .then((data) => setTransactions(data))
+      .catch(() => setTransactions([]))
+      .finally(() => setTxLoading(false));
+  }, [profile.id]);
 
   const saveTerms = (next: TermSheet[]) => {
     setTerms(next);
@@ -533,9 +568,96 @@ export default function DealRoom() {
 
         {page === 'marketplace' && <div className="space-y-6"><h1 className="text-2xl font-bold">Region Marketplace</h1><MarketplaceView onCreate={createTermForRegion} /></div>}
         {page === 'cap-table' && <div className="space-y-6"><h1 className="text-2xl font-bold">Cap Table</h1><CapTableView /></div>}
+        {page === 'transactions' && (
+          <TransactionsPage
+            transactions={transactions}
+            loading={txLoading}
+            admin={isAdmin}
+            ownerId={profile.id}
+            onRefresh={async () => {
+              if (!profile.id) return;
+              setTxLoading(true);
+              const data = await getDealTransactions(profile.id);
+              setTransactions(data);
+              setTxLoading(false);
+            }}
+          />
+        )}
       </main>
     </div>
   );
+}
+
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
 
 function PitchView() {
@@ -563,6 +685,78 @@ function PitchView() {
       </div>
     </div>
   );
+}
+
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
 
 function DataRoomView({ profile }: { profile: UserProfile }) {
@@ -611,6 +805,78 @@ function DataRoomView({ profile }: { profile: UserProfile }) {
       </div>
     </div>
   );
+}
+
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
 
 function TermSheetView({
@@ -757,6 +1023,78 @@ function TermSheetView({
   );
 }
 
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+}
+
 function MarketplaceView({ onCreate }: { onCreate: (r: Region) => void }) {
   const [selected, setSelected] = useState<Region | null>(null);
   return (
@@ -787,6 +1125,78 @@ function MarketplaceView({ onCreate }: { onCreate: (r: Region) => void }) {
       )}
     </div>
   );
+}
+
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
 
 function CapTableView() {
@@ -831,4 +1241,76 @@ function CapTableView() {
       </div>
     </div>
   );
+}
+
+function TransactionsPage({ transactions, loading, admin, ownerId, onRefresh }: {
+  transactions: DealTransaction[];
+  loading: boolean;
+  admin: boolean;
+  ownerId: string;
+  onRefresh: () => Promise<void>;
+}) {
+  const [filter, setFilter] = useState('all');
+  const filtered = filter === 'all' ? transactions : transactions.filter((t) => t.status === filter);
+  const updateStatus = async (id: string, status: string) => {
+    try { await updateDealTransaction(id, { status }); onRefresh(); }
+    catch (err: any) { alert('Update failed: ' + (err.message ?? err)); }
+  };
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {admin && (<div className="flex gap-2">
+          <button onClick={onRefresh} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs">Refresh</button>
+          <span className="text-xs text-slate-400">{loading ? 'Loading…' : `${transactions.length} record(s)`}</span>
+        </div>)}
+      </div>
+      {!admin && ownerId && (
+        <div className="p-4 border border-slate-800 rounded bg-slate-900/60 space-y-2">
+          <div className="text-sm font-medium text-slate-300">My Transactions</div>
+          <button onClick={async () => {
+            if (!ownerId) return;
+            const type = prompt('Transaction type (e.g. license_fee, upfront_payment):'); if (!type) return;
+            const amount = prompt('Amount USD (leave blank if no amount):');
+            const notes = prompt('Notes (optional):');
+            try {
+              await createDealTransaction(ownerId, { transaction_type: type, amount_usd: amount ? Number(amount) : null, notes: notes || '', status: 'pending' });
+              onRefresh();
+            } catch (err: any) { alert('Failed: ' + (err.message ?? err)); }
+          }} className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded text-xs text-white">New Transaction</button>
+          <div className="text-xs text-slate-400">Pending transactions are editable. Approved transactions require admin sign-off.</div>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {['all', 'pending', 'approved', 'rejected'].map((s) => (
+          <button key={s} onClick={() => setFilter(s)} className={`px-2 py-1 text-xs rounded ${filter === s ? 'bg-white text-slate-900' : 'bg-slate-800 hover:bg-slate-700'}`}>{s}</button>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {filtered.length === 0 && <p className="text-sm text-slate-400">No transactions found.</p>}
+        {filtered.map((t) => (
+          <div key={t.id} className="border border-slate-800 rounded bg-slate-900/60 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">{t.transaction_type}</p>
+                <p className="text-xs text-slate-400">{new Date(t.created_at).toLocaleString()}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">{t.amount_usd ? '$' + Number(t.amount_usd).toLocaleString() : '—'}</p>
+                <p className="text-xs text-slate-400">{t.status}</p>
+              </div>
+            </div>
+            {t.notes && <p className="text-xs text-slate-300">{t.notes}</p>}
+            {admin && t.status === 'pending' && (
+              <div className="flex gap-2">
+                <button onClick={() => updateStatus(t.id, 'approved')} className="px-2 py-1 text-xs bg-green-700 rounded text-white hover:bg-green-600">Approve</button>
+                <button onClick={() => updateStatus(t.id, 'rejected')} className="px-2 py-1 text-xs bg-red-700 rounded text-white hover:bg-red-600">Reject</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 }
