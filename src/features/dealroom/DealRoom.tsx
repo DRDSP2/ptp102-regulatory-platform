@@ -251,7 +251,8 @@ export default function DealRoom() {
     getDealOwnerByEmail(dealEmail)
       .then((owner) => setProfile((prev) => ({ ...prev, ...owner, tier: (owner.deal_tier as Tier) || prev.tier })))
       .catch(() => {});
-  }, [dealEmail]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [transactions, setTransactions] = useState([]);
   const [txLoading, setTxLoading] = useState(false);
