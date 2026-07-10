@@ -157,7 +157,7 @@ export default function VisualAid() {
     setUploading(true);
     try {
       const path = `${selectedHorse.patient_id}/${selectedHoof}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('xray-images')
         .upload(path, file);
       if (uploadError) throw uploadError;
@@ -493,7 +493,7 @@ export default function VisualAid() {
 
           {/* Timeline */}
           <div className="timeline">
-            {scans.map((scan, idx) => (
+            {scans.map((scan, _idx) => (
               <button
                 key={scan.id}
                 className={`timeline-dot ${selectedScan?.id === scan.id ? 'active' : ''}`}
