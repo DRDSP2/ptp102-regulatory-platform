@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/use-auth';
 export default function TrialPortal() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
-  const [mode, setMode] = useState<'select' | 'vet-login' | 'admin-login' | 'deal-login'>('select');
+  const [mode, setMode] = useState<'select' | 'vet-login' | 'admin-login' | 'company-login'>('select');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ export default function TrialPortal() {
     setLoading(true);
     try {
       await signIn(email, password);
-      // /dashboard redirects based on role in App.tsx
+      // Auth context resolves role; no need to pass role here.
       navigate('/dashboard', { replace: true });
     } catch (_err) {
       setError('Login failed. Check credentials and try again.');
@@ -28,7 +28,7 @@ export default function TrialPortal() {
 
   const openVet = () => setMode('vet-login');
   const openAdmin = () => setMode('admin-login');
-  const openDeal = () => setMode('deal-login');
+  const openCompany = () => setMode('company-login');
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -93,11 +93,11 @@ export default function TrialPortal() {
           <div className="grid gap-3 p-4">
             <button
               type="button"
-              onClick={openDeal}
-              className="flex items-center justify-center gap-2 rounded bg-amber-600 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-500"
+              onClick={openCompany}
+              className="flex w-full items-center justify-center gap-2 rounded border border-amber-600 bg-amber-900/50 px-4 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-800/50"
             >
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-xs">💼</span>
-              Deal Room Access
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-amber-500/20 text-xs">🏢</span>
+              Company / Licensing Partner
             </button>
             <button
               type="button"
@@ -118,13 +118,9 @@ export default function TrialPortal() {
           </div>
         </div>
 
-        {mode === 'vet-login' || mode === 'admin-login' || mode === 'deal-login' ? (
+        {(mode === 'vet-login' || mode === 'admin-login' || mode === 'company-login') ? (
           <form onSubmit={handleSubmit} className="mx-auto mt-6 max-w-md space-y-4 rounded-lg border border-slate-800 bg-slate-900 p-6">
-            <div className="text-sm font-semibold text-white">{mode === 'vet-login'
-                  ? 'Veterinarian Login'
-                  : mode === 'admin-login'
-                    ? 'Admin Login'
-                    : 'Deal Room Owner Login'}</div>
+            <div className="text-sm font-semibold text-white">{mode === 'vet-login' ? 'Veterinarian Login' : mode === 'admin-login' ? 'Admin Login' : 'Company / Licensing Partner Login'}</div>
             <label className="block text-sm">
               <span className="text-slate-300">Email</span>
               <input
@@ -153,22 +149,20 @@ export default function TrialPortal() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
-            <div className="flex items-center justify-between text-xs">
-              <button
-                type="button"
-                onClick={() => navigate('/reset-password')}
-                className="text-amber-300 hover:underline"
-              >
-                Forgot password?
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('select')}
-                className="text-slate-400 hover:text-slate-200"
-              >
-                ← Back
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/reset-password')}
+              className="text-left text-xs text-amber-400 hover:text-amber-300"
+            >
+              Forgot password?
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('select')}
+              className="w-full text-xs text-slate-400 hover:text-slate-200"
+            >
+              ← Back
+            </button>
           </form>
         ) : null}
       </div>
