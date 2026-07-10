@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import TrialPortal from '../features/login/TrialPortal';
 import ResetPassword from '../features/login/ResetPassword';
+import VetSignup from '../features/vet-signup/VetSignup';
 import { DashboardLayout } from '../features/dashboard/DashboardLayout';
 import Patients from '../features/patients/Patients';
 import ConsentWorkflow from '../features/consent/ConsentWorkflow';
@@ -107,6 +108,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<TrialPortal />} />
+      <Route path="/signup" element={<VetSignup />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={status === 'authenticated' ? <Navigate to={roleHome()} replace /> : <TrialPortal />} />
       <Route path="/dashboard" element={<RequireAuth><Navigate to={roleHome()} replace /></RequireAuth>} />

@@ -390,6 +390,32 @@ export async function getDealTransactions(ownerId: string) {
   return data ?? [];
 }
 
+// Edge Function calls
+export async function callEdgeFunction<T>(functionName: string, body: any): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase.functions.invoke(functionName, {
+    body,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+
+  if (error) throw error;
+  return data as T;
+}
+
+export async function createVeterinarianProfile(data: {
+  email: string;
+  full_name: string;
+  license_number: string;
+  license_state?: string;
+  license_expiry_date?: string;
+  phone?: string;
+  address?: string;
+}) {
+  return callEdgeFunction('create-vet-profile', data);
+}
+
 export async function createDealTransaction(ownerId: string, tx: Record<string, any>) {
   const { data, error } = await supabase.from('deal_room_transactions').insert({ owner_id: ownerId, ...tx }).select().single();
   if (error) throw error;
