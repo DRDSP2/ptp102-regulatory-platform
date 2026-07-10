@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Running pre-commit checks..."
+npm run lint
+npm run typecheck
+
+if [ -f "package-lock.json" ]; then
+  npm audit --omit=dev || echo "⚠️  npm audit found issues — review before pushing"
+fi
+
+echo "✅ Pre-commit checks passed"

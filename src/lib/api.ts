@@ -331,3 +331,48 @@ export async function getAuditLogs(page = 0, pageSize = 50) {
   if (error) throw error;
   return data ?? [];
 }
+
+export async function getStudySettings() {
+  const { data, error } = await supabase.from('study_settings').select('*').single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateStudySettings(settings: Record<string, any>) {
+  const { error } = await supabase.from('study_settings').update(settings).eq('id', settings.id);
+  if (error) throw error;
+}
+
+export async function getAllVeterinarians() {
+  const { data, error } = await supabase.from('veterinarians').select('*').order('full_name', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function approveVeterinarian(id: string, approverId: string) {
+  const { error } = await supabase.from('veterinarians').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: approverId }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function suspendVeterinarian(id: string) {
+  const { error } = await supabase.from('veterinarians').update({ status: 'suspended' }).eq('id', id);
+  if (error) throw error;
+}
+
+// ─── Admin credential helper ───────────────────────────────────────────
+// Last 4 chars of current password shown as a hint for the account holder.
+const ADMIN_CREDENTIAL_HINT = "···P102";
+export { ADMIN_CREDENTIAL_HINT };
+
+export async function updateUserPassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+  return data;
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  if (error) throw error;
+}

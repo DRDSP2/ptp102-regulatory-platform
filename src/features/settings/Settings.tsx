@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '../../hooks/use-auth';
-import { getSites } from '../../lib/api';
-import { Settings as SettingsIcon, AlertCircle, Shield, Database, CheckCircle } from 'lucide-react';
+import { getSites, getStudySettings, updateStudySettings, getAllVeterinarians, approveVeterinarian, suspendVeterinarian, updateUserPassword, sendPasswordResetEmail, ADMIN_CREDENTIAL_HINT } from '../../lib/api';
+import { Settings as SettingsIcon, AlertCircle, Shield, Database, CheckCircle, KeyRound, Mail } from 'lucide-react';
 
-type Tab = 'study' | 'vets' | 'integrations' | 'compliance';
+type Tab = 'study' | 'vets' | 'integrations' | 'compliance' | 'credentials';
 
 export default function Settings() {
-  const { role: _role } = useAuth();
+  const { role: _role, user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('study');
   const [settings, setSettings] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
@@ -57,6 +57,7 @@ export default function Settings() {
           <button onClick={() => setActiveTab('vets')} className={`px-3 py-1.5 rounded text-sm ${activeTab === 'vets' ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-800'}`}>Vets</button>
           <button onClick={() => setActiveTab('integrations')} className={`px-3 py-1.5 rounded text-sm ${activeTab === 'integrations' ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-800'}`}>Integrations</button>
           <button onClick={() => setActiveTab('compliance')} className={`px-3 py-1.5 rounded text-sm ${activeTab === 'compliance' ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-800'}`}>Compliance</button>
+              <button onClick={() => setActiveTab('credentials')} className={`px-3 py-1.5 rounded text-sm ${activeTab === 'credentials' ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-800'}`}>Credentials</button>
         </div>
       </div>
 
@@ -114,13 +115,105 @@ export default function Settings() {
           </div>
         )}
 
-        {activeTab !== 'study' && activeTab !== 'vets' && (
+        {activeTab !== 'study' && activeTab !== 'vets' && activeTab !== 'credentials' && (
           <div className="py-8 text-center text-slate-400">
             <AlertCircle className="h-8 w-8 mx-auto mb-2" />
             <p>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} panel placeholder.</p>
+          </div>
+        )}
+
+        {activeTab === 'credentials' && (
+          <div className="space-y-6">
+            <h3 className="font-medium flex items-center gap-2"><KeyRound className="h-4 w-4"/> Admin Credentials</h3>
+
+            <div className="p-4 bg-slate-900/60 border border-slate-800 rounded space-y-3">
+              <h4 className="text-sm font-medium text-slate-300">Current Account Details</h4>
+              <div className="grid gap-3 sm:grid-cols-2 text-sm">
+                <div>
+                  <span className="text-slate-400 block text-xs mb-1">Email</span>
+                  <span className="font-mono text-slate-200">{user?.email ?? 'drdsp@pm.me'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-xs mb-1">Password hint (last 4 chars)</span>
+                  <span className="font-mono text-slate-200">{ADMIN_CREDENTIAL_HINT}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-900/60 border border-slate-800 rounded space-y-3">
+              <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2"><Mail className="h-4 w-4"/> Reset via Email</h4>
+              <CredentialResetEmail />
+            </div>
+
+            <div className="p-4 bg-slate-900/60 border border-slate-800 rounded space-y-3">
+              <h4 className="text-sm font-medium text-slate-300">Change Password Now</h4>
+              <ChangePasswordForm />
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────
+function CredentialResetEmail() {
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('drdsp@pm.me');
+
+  const submit = async (ev: FormEvent) => {
+    ev.preventDefault();
+    setError('');
+    setBusy(true);
+    try { await sendPasswordResetEmail(email); setSent(true); }
+    catch (err: any) { setError(err.message ?? 'Failed to send reset email.'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-2 max-w-sm">
+      {sent
+        ? <p className="text-xs text-green-400">Reset link sent. Check your inbox.</p>
+        : <>
+            {error && <p className="text-xs text-red-400">{error}</p>}
+            <input className="w-full px-2 py-1.5 rounded border border-slate-800 bg-slate-950 text-sm" value={email} onChange={e => setEmail(e.target.value)} />
+            <button type="submit" disabled={busy} className="px-3 py-1.5 rounded bg-slate-100 text-xs font-medium text-slate-900 disabled:opacity-50">{busy ? 'Sending...' : 'Send Reset Link'}</button>
+          </>
+      }
+    </form>
+  );
+}
+
+function ChangePasswordForm() {
+  const [newPass, setNewPass] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setMsg('');
+    if (newPass.length < 8) { setMsg('Password must be at least 8 characters.'); return; }
+    if (newPass !== confirm) { setMsg('Passwords do not match.'); return; }
+    setBusy(true);
+    try { await updateUserPassword(newPass); setMsg('Password updated successfully.'); setNewPass(''); setConfirm(''); }
+    catch (err: any) { setMsg(err.message ?? 'Update failed.'); }
+    finally { setBusy(false); }
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-2 max-w-sm">
+      {msg && <p className={"text-xs " + (msg.includes("success") ? "text-green-400" : "text-red-400")}>{msg}</p>}
+      <label className="block text-xs text-slate-400">New password
+        <input type="password" className="mt-1 w-full px-2 py-1.5 rounded border border-slate-800 bg-slate-950 text-sm" value={newPass} onChange={e => setNewPass(e.target.value)} required minLength={8} />
+      </label>
+      <label className="block text-xs text-slate-400">Confirm
+        <input type="password" className="mt-1 w-full px-2 py-1.5 rounded border border-slate-800 bg-slate-950 text-sm" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+      </label>
+      <button type="submit" disabled={busy} className="px-3 py-1.5 rounded bg-slate-100 text-xs font-medium text-slate-900 disabled:opacity-50">{busy ? 'Updating...' : 'Change Password'}</button>
+    </form>
+  );
+}
+
