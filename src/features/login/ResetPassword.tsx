@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { updateUserPassword } from '../../lib/api';
+import Spinner from '../../components/ui/spinner';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -26,19 +27,53 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-950 text-slate-100 px-4">
-      <form onSubmit={submit} className="w-full max-w-sm space-y-4 border border-slate-800 rounded-md bg-slate-900/60 p-6">
-        <h1 className="text-xl font-semibold">Set New Password</h1>
-        {msg && <p className={'text-sm ' + (msg.includes('changed') ? 'text-green-400' : 'text-red-400')}>{msg}</p>}
+    <div className="min-h-screen grid place-items-center bg-[var(--page-bg)] text-[var(--text-strong)] px-4">
+      <form onSubmit={submit} className="w-full max-w-sm panel p-6 space-y-4 animate-slide-up">
+        <h1 className="text-xl font-semibold tracking-tight text-ink-900">Set New Password</h1>
+        <p className="text-sm text-ink-500">Choose a strong password for your account.</p>
+
+        {msg && (
+          <div className={`text-sm rounded-xl border px-3 py-2 ${msg.includes('changed') ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
+            {msg}
+          </div>
+        )}
+
         <label className="block">
-          <span className="text-sm text-slate-400">New password (min 8 characters)</span>
-          <input type="password" className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 text-sm" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} />
+          <span className="block text-xs font-medium text-ink-700">New password</span>
+          <input
+            type="password"
+            className="mt-1 w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(45,138,247,0.12)]"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
         </label>
+
         <label className="block">
-          <span className="text-sm text-slate-400">Confirm new password</span>
-          <input type="password" className="mt-1 w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 text-sm" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+          <span className="block text-xs font-medium text-ink-700">Confirm new password</span>
+          <input
+            type="password"
+            className="mt-1 w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:shadow-[0_0_0_4px_rgba(45,138,247,0.12)]"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
         </label>
-        <button type="submit" disabled={busy} className="w-full py-2 bg-blue-700 hover:bg-blue-600 rounded text-sm font-medium disabled:opacity-50">{busy ? 'Saving...' : 'Set new password'}</button>
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-ink-900 text-white text-sm font-medium hover:bg-ink-800 disabled:opacity-60 motion-safe:animate-fade-in"
+        >
+          {busy && <Spinner size={16} />}
+          {busy ? 'Saving...' : 'Set new password'}
+        </button>
+        <p className="text-xs text-ink-400">
+          Remember your password? <Link to="/login" className="text-brand-600 hover:text-brand-700">Sign in</Link>
+        </p>
       </form>
     </div>
   );

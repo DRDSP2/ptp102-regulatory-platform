@@ -14,24 +14,41 @@ import Reports from '../features/reports/Reports';
 import VeterinarianDashboard from '../features/veterinarians/VeterinarianDashboard';
 import DealRoom from '../features/dealroom/DealRoom';
 import VisualAid from '../features/visual-aid/VisualAid';
+import Spinner from '../components/ui/spinner';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
-  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
+  if (status === 'loading')
+    return (
+      <div className="min-h-screen grid place-items-center bg-[var(--page-bg)] text-ink-900">
+        <div className="flex items-center gap-3">
+          <Spinner size={22} />
+          <span className="text-sm">Loading...</span>
+        </div>
+      </div>
+    );
   if (status !== 'authenticated') return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function RequireRole({ allowedRoles, children }: { allowedRoles: string[]; children: React.ReactNode }) {
   const { status, role } = useAuth();
-  if (status === 'loading') return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
+  if (status === 'loading')
+    return (
+      <div className="min-h-screen grid place-items-center bg-[var(--page-bg)] text-ink-900">
+        <div className="flex items-center gap-3">
+          <Spinner size={22} />
+          <span className="text-sm">Checking access...</span>
+        </div>
+      </div>
+    );
   if (!allowedRoles.includes(role || '')) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400">
-        <div className="text-center">
-          <h2 className="text-lg font-medium mb-2">Access Denied</h2>
-          <p>Your role ({role}) does not have permission to access this page.</p>
-          <p className="text-sm mt-2">Required: {allowedRoles.join(', ')}</p>
+      <div className="min-h-screen grid place-items-center bg-[var(--page-bg)] text-ink-900">
+        <div className="panel p-8 text-center max-w-md animate-slide-up">
+          <div className="text-base font-semibold text-ink-900">Access Denied</div>
+          <p className="mt-2 text-sm text-ink-500">Your role ({role ?? 'none'}) does not have permission to access this page.</p>
+          <p className="mt-1 text-xs text-ink-400">Required: {allowedRoles.join(', ')}</p>
         </div>
       </div>
     );
@@ -93,10 +110,6 @@ function DealRoutes() {
 
 export function App() {
   const { status, role } = useAuth();
-
-  if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">Loading...</div>;
-  }
 
   const roleHome = () => {
     if (role === 'deal') return '/deal/dashboard';
